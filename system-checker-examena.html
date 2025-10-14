@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Requirements Checker for Examena</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: hsl(0 0% 98%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: hsl(0 0% 9%);
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: -0.025em;
+        }
+        
+        .header p {
+            color: hsl(0 0% 45%);
+            font-size: 18px;
+        }
+        
+        .card {
+            background: white;
+            border: 1px solid hsl(0 0% 89%);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .requirement-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            margin-bottom: 8px;
+            border: 1px solid hsl(0 0% 92%);
+            border-radius: 6px;
+            transition: border-color 0.2s;
+        }
+        
+        .requirement-item:hover {
+            border-color: hsl(0 0% 80%);
+        }
+        
+        .requirement-info {
+            flex: 1;
+        }
+        
+        .requirement-label {
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        
+        .requirement-detail {
+            font-size: 16px;
+            color: hsl(0 0% 45%);
+            line-height: 1.5;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .badge-pass {
+            background: hsl(142 76% 96%);
+            color: hsl(142 72% 29%);
+            border: 1px solid hsl(142 76% 86%);
+        }
+        
+        .badge-fail {
+            background: hsl(0 86% 97%);
+            color: hsl(0 72% 41%);
+            border: 1px solid hsl(0 86% 90%);
+        }
+        
+        .badge-unknown {
+            background: hsl(48 96% 95%);
+            color: hsl(32 95% 38%);
+            border: 1px solid hsl(48 96% 85%);
+        }
+        
+        .badge-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 6px;
+            border: 1px solid;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        
+        .btn-primary {
+            background: hsl(0 0% 9%);
+            color: white;
+            border-color: hsl(0 0% 9%);
+        }
+        
+        .btn-primary:hover {
+            background: hsl(0 0% 20%);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: hsl(0 0% 9%);
+            border-color: hsl(0 0% 89%);
+        }
+        
+        .btn-secondary:hover {
+            background: hsl(0 0% 96%);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .alert {
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            border: 1px solid;
+        }
+        
+        .alert-info {
+            background: hsl(204 100% 97%);
+            border-color: hsl(204 94% 88%);
+            color: hsl(204 94% 24%);
+        }
+        
+        .alert-warning {
+            background: hsl(48 96% 95%);
+            border-color: hsl(48 96% 85%);
+            color: hsl(32 95% 32%);
+        }
+        
+        .alert h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .alert p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        .alert a {
+            color: hsl(204 94% 40%);
+            text-decoration: underline;
+            font-weight: 500;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            border: 1px solid hsl(0 0% 89%);
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            resize: vertical;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: hsl(0 0% 40%);
+        }
+        
+        .summary-card {
+            padding: 24px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid;
+        }
+        
+        .summary-pass {
+            background: hsl(142 76% 96%);
+            border-color: hsl(142 76% 86%);
+        }
+        
+        .summary-pass h2 {
+            color: hsl(142 72% 29%);
+        }
+        
+        .summary-pass p {
+            color: hsl(142 72% 35%);
+        }
+        
+        .summary-fail {
+            background: hsl(0 86% 97%);
+            border-color: hsl(0 86% 90%);
+        }
+        
+        .summary-fail h2 {
+            color: hsl(0 72% 41%);
+        }
+        
+        .summary-fail p {
+            color: hsl(0 72% 45%);
+        }
+        
+        .summary-unknown {
+            background: hsl(48 96% 95%);
+            border-color: hsl(48 96% 85%);
+        }
+        
+        .summary-unknown h2 {
+            color: hsl(32 95% 38%);
+        }
+        
+        .summary-unknown p {
+            color: hsl(32 95% 42%);
+        }
+        
+        .summary-default {
+            background: hsl(204 100% 97%);
+            border-color: hsl(204 94% 88%);
+        }
+        
+        .summary-default h2 {
+            color: hsl(204 94% 24%);
+        }
+        
+        .summary-default p {
+            color: hsl(204 94% 30%);
+        }
+        
+        .summary-card h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .summary-card p {
+            font-size: 14px;
+        }
+        
+        .resolution-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            margin-left: 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .resolution-4k { background: hsl(142 72% 29%); color: white; }
+        .resolution-2k { background: hsl(204 94% 40%); color: white; }
+        .resolution-fullhd { background: hsl(262 83% 58%); color: white; }
+        .resolution-hd { background: hsl(280 81% 48%); color: white; }
+        .resolution-vga { background: hsl(32 95% 44%); color: white; }
+        .resolution-sd { background: hsl(0 72% 51%); color: white; }
+        
+        .media-preview {
+            margin-top: 16px;
+            padding: 20px;
+            background: hsl(0 0% 98%);
+            border: 1px solid hsl(0 0% 89%);
+            border-radius: 6px;
+        }
+        
+        .camera-video-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto 16px;
+            background: black;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid hsl(0 0% 89%);
+        }
+        
+        .camera-video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .media-info {
+            text-align: center;
+            font-size: 13px;
+            color: hsl(0 0% 45%);
+            margin-bottom: 12px;
+        }
+        
+        .audio-level-container {
+            margin-bottom: 16px;
+        }
+        
+        .audio-level-label {
+            font-size: 13px;
+            color: hsl(0 0% 45%);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .audio-level-bar {
+            width: 100%;
+            height: 40px;
+            background: hsl(0 0% 94%);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid hsl(0 0% 89%);
+        }
+        
+        .audio-level-fill {
+            height: 100%;
+            background: linear-gradient(90deg, hsl(142 72% 29%) 0%, hsl(204 94% 40%) 50%, hsl(0 72% 51%) 100%);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+        
+        .audio-level-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 500;
+            color: hsl(0 0% 20%);
+            font-size: 13px;
+        }
+        
+        .status-indicator {
+            text-align: center;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            border: 1px solid;
+        }
+        
+        .status-listening {
+            background: hsl(142 76% 96%);
+            color: hsl(142 72% 29%);
+            border-color: hsl(142 76% 86%);
+        }
+        
+        .status-recording {
+            background: hsl(0 86% 97%);
+            color: hsl(0 72% 41%);
+            border-color: hsl(0 86% 90%);
+        }
+        
+        .status-idle {
+            background: hsl(0 0% 96%);
+            color: hsl(0 0% 45%);
+            border-color: hsl(0 0% 89%);
+        }
+        
+        .pulse-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: hsl(0 72% 51%);
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        .controls {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .timer {
+            text-align: center;
+            margin-top: 12px;
+            font-weight: 600;
+            color: hsl(0 72% 51%);
+            font-size: 14px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>System Requirements Checker for Examena</h1>
+            <p>Verify your system meets all necessary requirments for <a href="https://cdn.maivenpoint.com/assets/webhelp/examena-user-guide-for-candidate/index.htm#!Documents/howtoprepareforclosedbookexams.htm">device</a> and <a href="https://cdn.maivenpoint.com/assets/webhelp/examena-user-guide-for-candidate/index.htm#!Documents/aboutmaivenpointexamena.htm">browser</a></p>
+        </div>
+        
+        <div class="card">
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="checkAllRequirements()">Check All Requirements</button>
+                <button class="btn btn-secondary" onclick="resetChecker()">Reset</button>
+            </div>
+        </div>
+        
+        <div class="card hidden" id="auto-section">
+            <div class="card-title">
+                <span>🔄</span> Auto-Detected Requirements
+            </div>
+            
+            <div id="auto-requirements"></div>
+            
+            <div class="alert alert-warning hidden" id="permission-box">
+                <p style="margin-bottom: 12px;">To check camera and microphone, we need your permission. Click below to test:</p>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="testCamera()">Test Camera</button>
+                    <button class="btn btn-secondary" onclick="testMicrophone()">Test Microphone</button>
+                </div>
+                
+                <div id="camera-preview" class="media-preview hidden">
+                    <div class="camera-video-container">
+                        <video id="camera-video" class="camera-video" autoplay playsinline muted></video>
+                    </div>
+                    <div class="media-info" id="camera-info">📹 Camera feed active</div>
+                    <div class="controls">
+                        <button class="btn btn-secondary" onclick="stopCameraTest()">Stop Camera Test</button>
+                    </div>
+                </div>
+                
+                <div id="audio-visualizer" class="media-preview hidden">
+                    <div class="status-indicator status-idle" id="mic-status">
+                        🎤 Click "Test Microphone" to begin
+                    </div>
+                    
+                    <div class="audio-level-container">
+                        <div class="audio-level-label">
+                            <span>Audio Level:</span>
+                            <span id="audio-level-value">0%</span>
+                        </div>
+                        <div class="audio-level-bar">
+                            <div class="audio-level-fill" id="audio-level-fill"></div>
+                            <div class="audio-level-text" id="audio-level-text">Speak to test</div>
+                        </div>
+                    </div>
+                    
+                    <div class="controls">
+                        <button class="btn btn-secondary hidden" id="record-audio-button" onclick="startRecording()">
+                            🔴 Start Recording
+                        </button>
+                        <button class="btn btn-secondary hidden" id="stop-recording-button" onclick="stopRecording()">
+                            ⏹️ Stop Recording
+                        </button>
+                        <button class="btn btn-secondary hidden" id="play-audio-button" onclick="playRecording()">
+                            ▶️ Play Recording
+                        </button>
+                        <button class="btn btn-secondary hidden" id="pause-audio-button" onclick="pauseRecording()">
+                            ⏸️ Pause
+                        </button>
+                        <button class="btn btn-secondary" id="stop-mic-button" onclick="stopMicrophoneTest()">
+                            Stop Testing
+                        </button>
+                    </div>
+                    
+                    <div id="recording-timer" class="timer hidden">
+                        Recording: <span id="timer-display">00:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hidden" id="manual-section">
+            <div class="card-title">
+                <span>📋</span> Manual System Information
+            </div>
+            
+            <div class="alert alert-info">
+                <h3>How to Check Your System Information:</h3>
+                <p><strong>Windows:</strong> Press Win + I → System → About. For available RAM, press Ctrl + Shift + Esc → Performance → Memory.</p>
+                <p style="margin-top: 8px;"><strong>macOS:</strong> Click  → About This Mac. For available RAM, open Activity Monitor → Memory tab.</p>
+            </div>
+            
+            <p style="color: hsl(0 0% 45%); font-size: 13px; margin-bottom: 12px;">Paste your system information below for more accurate processor, memory, and disk space checks:</p>
+            <textarea id="systemInfo" placeholder="Paste your system information here...
+
+Example Windows format:
+Processor    Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz
+Installed RAM    16.0 GB (15.5 GB usable)
+System type    64-bit operating system, x64-based processor
+Edition    Windows 11 Pro
+
+Example macOS format:
+Model Name: MacBook Pro
+Chip: Apple M2
+Total Number of Cores: 8
+Memory: 16 GB"></textarea>
+            <button class="btn btn-primary" onclick="parseSystemInfo()">Analyze System Information</button>
+        </div>
+        
+        <div class="card hidden" id="parsed-section">
+            <div class="card-title">
+                <span>📊</span> Parsed System Requirements
+            </div>
+            <div id="parsed-results"></div>
+        </div>
+        
+        <div class="summary-card summary-default" id="summary">
+            <h2>Click "Check All Requirements" to Begin</h2>
+            <p>We'll automatically detect what we can and guide you through the rest</p>
+        </div>
+    </div>
+
+    <script>
+        let results = {
+            browser: { status: 'unknown', detail: '', isHTML: false },
+            os: { status: 'unknown', detail: '', isHTML: false },
+            processor: { status: 'unknown', detail: '', isHTML: false },
+            memory: { status: 'unknown', detail: '', isHTML: false },
+            disk: { status: 'unknown', detail: '', isHTML: false },
+            camera: { status: 'unknown', detail: '', isHTML: false },
+            microphone: { status: 'unknown', detail: '', isHTML: false }
+        };
+
+        let micStream = null;
+        let audioContext = null;
+        let analyser = null;
+        let animationId = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recordedAudioBlob = null;
+        let audioElement = null;
+        let cameraStream = null;
+
+        async function checkAllRequirements() {
+            checkBrowser();
+            await checkOS();
+            await checkProcessor();
+            await checkMemory();
+            await checkDiskSpace();
+            
+            document.getElementById('auto-section').classList.remove('hidden');
+            document.getElementById('manual-section').classList.remove('hidden');
+            document.getElementById('permission-box').classList.remove('hidden');
+            
+            renderAutoDetected();
+            updateSummary();
+        }
+
+        function checkBrowser() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isChrome = userAgent.includes('chrome') && !userAgent.includes('edg');
+            const isEdge = userAgent.includes('edg');
+            
+            if (isChrome || isEdge) {
+                const browserName = isEdge ? 'Microsoft Edge' : 'Google Chrome';
+                results.browser = { 
+                    status: 'pass', 
+                    detail: `${browserName} detected`,
+                    isHTML: false
+                };
+            } else {
+                let detectedBrowser = 'Unknown browser';
+                if (userAgent.includes('firefox')) detectedBrowser = 'Firefox';
+                else if (userAgent.includes('safari') && !userAgent.includes('chrome')) detectedBrowser = 'Safari';
+                
+                results.browser = { 
+                    status: 'fail', 
+                    detail: `${detectedBrowser} detected. Please use Chrome or Edge.`,
+                    isHTML: false
+                };
+            }
+        }
+
+        async function checkOS() {
+            if (navigator.userAgentData) {
+                try {
+                    const uaData = await navigator.userAgentData.getHighEntropyValues([
+                        'platform',
+                        'platformVersion',
+                        'architecture',
+                        'bitness'
+                    ]);
+                    
+                    const platform = uaData.platform;
+                    const platformVersion = uaData.platformVersion;
+                    const bitness = uaData.bitness || '64';
+                    
+                    if (platform === 'Windows') {
+                        const versionNumber = parseFloat(platformVersion);
+                        const is64bit = bitness === '64';
+                        
+                        let windowsVersion = '';
+                        if (versionNumber >= 13) {
+                            windowsVersion = 'Windows 11';
+                        } else if (versionNumber >= 10) {
+                            windowsVersion = 'Windows 10';
+                        } else {
+                            windowsVersion = 'Older Windows';
+                        }
+                        
+                        if (versionNumber >= 10 && is64bit) {
+                            results.os = { 
+                                status: 'pass', 
+                                detail: `${windowsVersion} ${bitness}-bit detected (via Client Hints)`,
+                                isHTML: false
+                            };
+                        } else if (versionNumber < 10) {
+                            results.os = { 
+                                status: 'fail', 
+                                detail: `${windowsVersion} detected. Requires Windows 10 or later.`,
+                                isHTML: false
+                            };
+                        } else if (!is64bit) {
+                            results.os = { 
+                                status: 'fail', 
+                                detail: `${windowsVersion} ${bitness}-bit detected. Requires 64-bit.`,
+                                isHTML: false
+                            };
+                        }
+                    }
+                    else if (platform === 'macOS') {
+                        const majorVersion = parseInt(platformVersion.split('.')[0]);
+                        
+                        if (majorVersion >= 11) {
+                            results.os = { 
+                                status: 'pass', 
+                                detail: `macOS ${majorVersion}+ detected (via Client Hints)`,
+                                isHTML: false
+                            };
+                        } else {
+                            results.os = { 
+                                status: 'fail', 
+                                detail: `macOS ${majorVersion} detected. Requires macOS 11 or later.`,
+                                isHTML: false
+                            };
+                        }
+                    }
+                    else {
+                        results.os = { 
+                            status: 'fail', 
+                            detail: `${platform} detected. Requires Windows 10+ or macOS 11+`,
+                            isHTML: false
+                        };
+                    }
+                    return;
+                } catch (error) {
+                    console.log('Client Hints not fully supported, falling back to User-Agent parsing');
+                }
+            }
+            
+            const userAgent = navigator.userAgent;
+            
+            if (userAgent.includes('Windows')) {
+                const isWin10Plus = userAgent.includes('Windows NT 10.0') || 
+                                   userAgent.includes('Windows NT 11.0');
+                const is64bit = userAgent.includes('Win64') || userAgent.includes('x64');
+                
+                if (isWin10Plus && is64bit) {
+                    results.os = { 
+                        status: 'pass', 
+                        detail: 'Windows 10/11 64-bit detected (via User-Agent)',
+                        isHTML: false
+                    };
+                } else if (!isWin10Plus) {
+                    results.os = { 
+                        status: 'fail', 
+                        detail: 'Windows version too old. Requires Windows 10 or later.',
+                        isHTML: false
+                    };
+                } else if (!is64bit) {
+                    results.os = { 
+                        status: 'fail', 
+                        detail: '32-bit Windows detected. Requires 64-bit.',
+                        isHTML: false
+                    };
+                }
+            }
+            else if (userAgent.includes('Mac OS X') || userAgent.includes('Macintosh')) {
+                const versionMatch = userAgent.match(/Mac OS X (\d+)[._](\d+)/);
+                if (versionMatch) {
+                    const majorVersion = parseInt(versionMatch[1]);
+                    if (majorVersion >= 11 || (majorVersion === 10 && parseInt(versionMatch[2]) >= 15)) {
+                        results.os = { 
+                            status: 'pass', 
+                            detail: `macOS ${majorVersion >= 11 ? majorVersion : '10.' + versionMatch[2]} detected (via User-Agent)`,
+                            isHTML: false
+                        };
+                    } else {
+                        results.os = { 
+                            status: 'fail', 
+                            detail: `macOS ${majorVersion}.${versionMatch[2]} detected. Requires macOS 11 or later.`,
+                            isHTML: false
+                        };
+                    }
+                } else {
+                    results.os = { 
+                        status: 'unknown', 
+                        detail: 'macOS detected but version unclear. Requires macOS 11+',
+                        isHTML: false
+                    };
+                }
+            } else {
+                results.os = { 
+                    status: 'fail', 
+                    detail: 'Unsupported OS. Requires Windows 10+ or macOS 11+',
+                    isHTML: false
+                };
+            }
+        }
+
+        async function checkProcessor() {
+            const cores = navigator.hardwareConcurrency || 0;
+            let architecture = 'Unknown';
+            let bitness = '';
+            
+            if (navigator.userAgentData) {
+                try {
+                    const uaData = await navigator.userAgentData.getHighEntropyValues([
+                        'architecture',
+                        'bitness',
+                        'platform'
+                    ]);
+                    
+                    architecture = uaData.architecture || 'Unknown';
+                    bitness = uaData.bitness || '';
+                    
+                    if (architecture === 'x86') {
+                        architecture = bitness === '64' ? 'x64' : 'x86 (32-bit)';
+                    } else if (architecture === 'arm') {
+                        architecture = bitness === '64' ? 'ARM64' : 'ARM';
+                    }
+                    
+                    const isWindows = uaData.platform === 'Windows';
+                    if (isWindows && (architecture.includes('ARM') || architecture.toLowerCase().includes('arm'))) {
+                        results.processor = { 
+                            status: 'fail', 
+                            detail: `${cores} cores detected, ${architecture} architecture. Windows requires x64 Intel/AMD processor.`,
+                            isHTML: false
+                        };
+                        return;
+                    }
+                    
+                    if (cores >= 2) {
+                        results.processor = { 
+                            status: 'unknown', 
+                            detail: `${cores} logical processors, ${architecture} detected (via Client Hints). Cannot auto-detect speed. Please paste system info for full verification.`,
+                            isHTML: false
+                        };
+                        return;
+                    } else if (cores > 0) {
+                        results.processor = { 
+                            status: 'fail', 
+                            detail: `Only ${cores} processor detected, ${architecture}. Requires at least 2 cores.`,
+                            isHTML: false
+                        };
+                        return;
+                    }
+                } catch (error) {
+                    console.log('Client Hints not fully supported, falling back to User-Agent parsing');
+                }
+            }
+            
+            const userAgent = navigator.userAgent.toLowerCase();
+            const platform = navigator.platform.toLowerCase();
+            
+            if (userAgent.includes('arm') || platform.includes('arm')) {
+                architecture = 'ARM';
+            }
+            else if (userAgent.includes('win64') || userAgent.includes('x64') || 
+                     userAgent.includes('amd64') || userAgent.includes('wow64')) {
+                architecture = 'x64';
+            }
+            else if (userAgent.includes('x86') || platform.includes('win32')) {
+                architecture = 'x86 (32-bit)';
+            }
+            else if (platform.includes('intel') || platform.includes('x86')) {
+                architecture = 'x64 (Intel)';
+            }
+            else if (platform === 'macintel' && navigator.maxTouchPoints > 0) {
+                architecture = 'ARM (Apple Silicon)';
+            }
+            
+            let cpuVendor = '';
+            if (userAgent.includes('intel')) cpuVendor = 'Intel';
+            else if (userAgent.includes('amd')) cpuVendor = 'AMD';
+            
+            const isWindows = userAgent.includes('windows');
+            if (isWindows && architecture === 'ARM') {
+                results.processor = { 
+                    status: 'fail', 
+                    detail: `${cores} cores detected, ARM architecture. Windows requires x64 Intel/AMD processor.`,
+                    isHTML: false
+                };
+                return;
+            }
+            
+            const architectureInfo = architecture !== 'Unknown' ? `, ${architecture}` : '';
+            const vendorInfo = cpuVendor ? ` ${cpuVendor}` : '';
+            
+            if (cores >= 2) {
+                results.processor = { 
+                    status: 'unknown', 
+                    detail: `${cores} logical processors${vendorInfo}${architectureInfo} detected (via User-Agent). Cannot auto-detect speed. Please paste system info for full verification.`,
+                    isHTML: false
+                };
+            } else if (cores > 0) {
+                results.processor = { 
+                    status: 'fail', 
+                    detail: `Only ${cores} processor${architectureInfo} detected. Requires at least 2 cores.`,
+                    isHTML: false
+                };
+            } else {
+                results.processor = { 
+                    status: 'unknown', 
+                    detail: 'Cannot detect processor info automatically. Please paste system information.',
+                    isHTML: false
+                };
+            }
+        }
+
+        async function checkMemory() {
+            if ('deviceMemory' in navigator) {
+                const memoryGB = navigator.deviceMemory;
+                if (memoryGB >= 2) {
+                    results.memory = { 
+                        status: 'pass', 
+                        detail: `Approximately ${memoryGB} GB RAM detected`,
+                        isHTML: false
+                    };
+                } else {
+                    results.memory = { 
+                        status: 'fail', 
+                        detail: `Only ${memoryGB} GB RAM detected. Requires at least 2 GB available.`,
+                        isHTML: false
+                    };
+                }
+            } else {
+                results.memory = { 
+                    status: 'unknown', 
+                    detail: 'Cannot detect memory automatically. Please paste system information.',
+                    isHTML: false
+                };
+            }
+        }
+
+        async function checkDiskSpace() {
+            if ('storage' in navigator && 'estimate' in navigator.storage) {
+                try {
+                    const estimate = await navigator.storage.estimate();
+                    const availableGB = ((estimate.quota - estimate.usage) / (1024 * 1024 * 1024)).toFixed(2);
+                    
+                    if (availableGB >= 1) {
+                        results.disk = { 
+                            status: 'pass', 
+                            detail: `Approximately ${availableGB} GB browser storage available`,
+                            isHTML: false
+                        };
+                    } else {
+                        results.disk = { 
+                            status: 'unknown', 
+                            detail: `Browser storage: ${availableGB} GB. Please verify you have at least 1 GB free.`,
+                            isHTML: false
+                        };
+                    }
+                } catch (e) {
+                    results.disk = { 
+                        status: 'unknown', 
+                        detail: 'Cannot detect disk space automatically.',
+                        isHTML: false
+                    };
+                }
+            } else {
+                results.disk = { 
+                    status: 'unknown', 
+                    detail: 'Cannot detect disk space automatically.',
+                    isHTML: false
+                };
+            }
+        }
+
+        function getResolutionName(width, height) {
+            if (width >= 3840 && height >= 2160) return '4K UHD';
+            if (width >= 2560 && height >= 1440) return '2K QHD';
+            if (width >= 1920 && height >= 1080) return 'Full HD';
+            if (width >= 1280 && height >= 720) return 'HD';
+            if (width >= 640 && height >= 480) return 'VGA';
+            return 'SD';
+        }
+
+        function getResolutionBadgeClass(resolutionName) {
+            const classMap = {
+                '4K UHD': 'resolution-4k',
+                '2K QHD': 'resolution-2k',
+                'Full HD': 'resolution-fullhd',
+                'HD': 'resolution-hd',
+                'VGA': 'resolution-vga',
+                'SD': 'resolution-sd'
+            };
+            return classMap[resolutionName] || 'resolution-sd';
+        }
+
+        async function testCamera() {
+            try {
+                stopCameraTest();
+                
+                cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 1920 }, 
+                        height: { ideal: 1080 },
+                        frameRate: { ideal: 30 }
+                    } 
+                });
+                
+                const videoElement = document.getElementById('camera-video');
+                videoElement.srcObject = cameraStream;
+                document.getElementById('camera-preview').classList.remove('hidden');
+                
+                const videoTrack = cameraStream.getVideoTracks()[0];
+                const settings = videoTrack.getSettings();
+                
+                const width = settings.width || 0;
+                const height = settings.height || 0;
+                const frameRate = settings.frameRate ? Math.round(settings.frameRate) : null;
+                const resolution = `${width}x${height}`;
+                const resolutionName = getResolutionName(width, height);
+                const badgeClass = getResolutionBadgeClass(resolutionName);
+                const is480pOrBetter = height >= 480;
+                
+                let infoHTML = `📹 Camera active at ${resolution} <span class="resolution-badge ${badgeClass}">${resolutionName}</span>`;
+                if (frameRate) {
+                    infoHTML += `, ${frameRate} fps`;
+                }
+                document.getElementById('camera-info').innerHTML = infoHTML;
+                
+                if (is480pOrBetter) {
+                    let detailHTML = `Camera working at ${resolution} <span class="resolution-badge ${badgeClass}">${resolutionName}</span>`;
+                    if (frameRate) {
+                        detailHTML += `, ${frameRate} fps`;
+                    }
+                    
+                    results.camera = { 
+                        status: 'pass', 
+                        detail: detailHTML,
+                        isHTML: true
+                    };
+                } else {
+                    results.camera = { 
+                        status: 'fail', 
+                        detail: `Camera detected but resolution too low (${resolution}). Requires 480p or better`,
+                        isHTML: false
+                    };
+                }
+            } catch (error) {
+                results.camera = { 
+                    status: 'fail', 
+                    detail: `Camera access denied or not available: ${error.message}`,
+                    isHTML: false
+                };
+            }
+            renderAutoDetected();
+            updateSummary();
+        }
+        
+        function stopCameraTest() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            
+            const videoElement = document.getElementById('camera-video');
+            if (videoElement) {
+                videoElement.srcObject = null;
+            }
+            
+            document.getElementById('camera-preview').classList.add('hidden');
+        }
+
+        async function testMicrophone() {
+            try {
+                stopMicrophoneTest();
+                
+                document.getElementById('audio-visualizer').classList.remove('hidden');
+                document.getElementById('mic-status').className = 'status-indicator status-listening';
+                document.getElementById('mic-status').innerHTML = '<span class="pulse-dot"></span>Listening... Speak to test your microphone';
+                document.getElementById('stop-mic-button').classList.remove('hidden');
+                document.getElementById('record-audio-button').classList.remove('hidden');
+                
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                const microphone = audioContext.createMediaStreamSource(micStream);
+                
+                analyser.fftSize = 256;
+                analyser.smoothingTimeConstant = 0.8;
+                microphone.connect(analyser);
+                
+                visualizeAudio();
+                
+                results.microphone = { 
+                    status: 'pass', 
+                    detail: 'Microphone working - speak to see audio levels',
+                    isHTML: false
+                };
+            } catch (error) {
+                document.getElementById('audio-visualizer').classList.add('hidden');
+                results.microphone = { 
+                    status: 'fail', 
+                    detail: `Microphone access denied or not available: ${error.message}`,
+                    isHTML: false
+                };
+            }
+            renderAutoDetected();
+            updateSummary();
+        }
+
+        let recordingStartTime = null;
+        let recordingTimerInterval = null;
+
+        function startRecording() {
+            if (!micStream) return;
+            
+            try {
+                recordedChunks = [];
+                recordedAudioBlob = null;
+                
+                const options = { mimeType: 'audio/webm' };
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'audio/mp4';
+                }
+                
+                mediaRecorder = new MediaRecorder(micStream, options);
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = () => {
+                    recordedAudioBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
+                    document.getElementById('play-audio-button').classList.remove('hidden');
+                    
+                    document.getElementById('mic-status').className = 'status-indicator status-listening';
+                    document.getElementById('mic-status').innerHTML = '✅ Recording saved! Click "Play Recording" to listen';
+                };
+                
+                mediaRecorder.start(100);
+                recordingStartTime = Date.now();
+                
+                document.getElementById('record-audio-button').classList.add('hidden');
+                document.getElementById('stop-recording-button').classList.remove('hidden');
+                document.getElementById('recording-timer').classList.remove('hidden');
+                
+                document.getElementById('mic-status').className = 'status-indicator status-recording';
+                document.getElementById('mic-status').innerHTML = '<span class="pulse-dot"></span>Recording in progress... Speak now!';
+                
+                recordingTimerInterval = setInterval(updateRecordingTimer, 100);
+                
+            } catch (error) {
+                console.error('Error starting recording:', error);
+                alert('Error starting recording: ' + error.message);
+            }
+        }
+
+        function updateRecordingTimer() {
+            if (!recordingStartTime) return;
+            
+            const elapsed = Date.now() - recordingStartTime;
+            const seconds = Math.floor(elapsed / 1000);
+            const tenths = Math.floor((elapsed % 1000) / 100);
+            
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            
+            document.getElementById('timer-display').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${tenths}`;
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                
+                if (recordingTimerInterval) {
+                    clearInterval(recordingTimerInterval);
+                    recordingTimerInterval = null;
+                }
+                recordingStartTime = null;
+                
+                document.getElementById('record-audio-button').classList.remove('hidden');
+                document.getElementById('stop-recording-button').classList.add('hidden');
+                document.getElementById('recording-timer').classList.add('hidden');
+            }
+        }
+
+        function playRecording() {
+            if (!recordedAudioBlob) return;
+            
+            if (audioElement) {
+                audioElement.pause();
+                audioElement = null;
+            }
+            
+            audioElement = new Audio(URL.createObjectURL(recordedAudioBlob));
+            
+            audioElement.onended = () => {
+                document.getElementById('play-audio-button').classList.remove('hidden');
+                document.getElementById('pause-audio-button').classList.add('hidden');
+                
+                document.getElementById('mic-status').className = 'status-indicator status-listening';
+                document.getElementById('mic-status').innerHTML = '✅ Playback finished';
+            };
+            
+            audioElement.play();
+            
+            document.getElementById('play-audio-button').classList.add('hidden');
+            document.getElementById('pause-audio-button').classList.remove('hidden');
+            
+            document.getElementById('mic-status').className = 'status-indicator status-listening';
+            document.getElementById('mic-status').innerHTML = '🔊 Playing your recording...';
+        }
+
+        function pauseRecording() {
+            if (audioElement) {
+                audioElement.pause();
+                
+                document.getElementById('play-audio-button').classList.remove('hidden');
+                document.getElementById('pause-audio-button').classList.add('hidden');
+                
+                document.getElementById('mic-status').className = 'status-indicator status-listening';
+                document.getElementById('mic-status').innerHTML = '⏸️ Playback paused';
+            }
+        }
+
+        function visualizeAudio() {
+            if (!analyser) return;
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            function draw() {
+                animationId = requestAnimationFrame(draw);
+                
+                analyser.getByteFrequencyData(dataArray);
+                
+                let sum = 0;
+                for (let i = 0; i < bufferLength; i++) {
+                    sum += dataArray[i];
+                }
+                const average = sum / bufferLength;
+                const percentage = Math.min(100, (average / 128) * 100);
+                
+                const fill = document.getElementById('audio-level-fill');
+                const valueText = document.getElementById('audio-level-value');
+                const levelText = document.getElementById('audio-level-text');
+                
+                if (fill && valueText && levelText) {
+                    fill.style.width = percentage + '%';
+                    valueText.textContent = Math.round(percentage) + '%';
+                    
+                    if (percentage < 10) {
+                        levelText.textContent = 'Too quiet - speak louder';
+                    } else if (percentage < 30) {
+                        levelText.textContent = 'Good level';
+                    } else if (percentage < 70) {
+                        levelText.textContent = 'Excellent level!';
+                    } else {
+                        levelText.textContent = 'Very loud';
+                    }
+                }
+            }
+            
+            draw();
+        }
+
+        function stopMicrophoneTest() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            
+            if (recordingTimerInterval) {
+                clearInterval(recordingTimerInterval);
+                recordingTimerInterval = null;
+            }
+            recordingStartTime = null;
+            
+            if (audioElement) {
+                audioElement.pause();
+                audioElement = null;
+            }
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            
+            if (micStream) {
+                micStream.getTracks().forEach(track => track.stop());
+                micStream = null;
+            }
+            
+            recordedChunks = [];
+            recordedAudioBlob = null;
+            mediaRecorder = null;
+            
+            document.getElementById('audio-visualizer').classList.add('hidden');
+            document.getElementById('stop-mic-button').classList.add('hidden');
+            document.getElementById('record-audio-button').classList.add('hidden');
+            document.getElementById('stop-recording-button').classList.add('hidden');
+            document.getElementById('play-audio-button').classList.add('hidden');
+            document.getElementById('pause-audio-button').classList.add('hidden');
+            document.getElementById('recording-timer').classList.add('hidden');
+            
+            const fill = document.getElementById('audio-level-fill');
+            const valueText = document.getElementById('audio-level-value');
+            const levelText = document.getElementById('audio-level-text');
+            const micStatus = document.getElementById('mic-status');
+            
+            if (fill) fill.style.width = '0%';
+            if (valueText) valueText.textContent = '0%';
+            if (levelText) levelText.textContent = 'Speak to test';
+            if (micStatus) {
+                micStatus.className = 'status-indicator status-idle';
+                micStatus.innerHTML = '🎤 Click "Test Microphone" to begin';
+            }
+        }
+
+        function parseSystemInfo() {
+            const text = document.getElementById('systemInfo').value;
+            if (!text.trim()) {
+                alert('Please paste your system information first.');
+                return;
+            }
+
+            const parsedResults = {};
+            
+            const processorMatch = text.match(/Processor[:\s]+(.+?)(?:CPU)?(?:@\s*([\d.]+)\s*GHz)?/i);
+            const coreMatch = text.match(/Cores[:\s]+(\d+)/i);
+            const speedMatch = text.match(/(?:Base speed|Speed)[:\s]+([\d.]+)\s*(?:GHz|MHz)/i);
+            const typeMatch = text.match(/(x64|x86|ARM)/i);
+            
+            if (processorMatch || coreMatch || speedMatch) {
+                let processorDetail = '';
+                let processorStatus = 'unknown';
+                
+                const cores = coreMatch ? parseInt(coreMatch[1]) : 0;
+                const speed = speedMatch ? parseFloat(speedMatch[1]) : 
+                             (processorMatch && processorMatch[2]) ? parseFloat(processorMatch[2]) : 0;
+                const architecture = typeMatch ? typeMatch[1].toLowerCase() : '';
+                const processorName = processorMatch ? processorMatch[1].trim() : '';
+                
+                let cpuVendor = '';
+                const lowerProcessorName = processorName.toLowerCase();
+                if (lowerProcessorName.includes('intel')) {
+                    cpuVendor = 'Intel';
+                } else if (lowerProcessorName.includes('amd') || lowerProcessorName.includes('ryzen') || lowerProcessorName.includes('epyc')) {
+                    cpuVendor = 'AMD';
+                } else if (lowerProcessorName.includes('arm') || lowerProcessorName.includes('qualcomm') || 
+                           lowerProcessorName.includes('snapdragon') || architecture === 'arm') {
+                    cpuVendor = 'ARM';
+                } else if (lowerProcessorName.includes('apple')) {
+                    cpuVendor = 'Apple Silicon (ARM)';
+                }
+                
+                const vendorInfo = cpuVendor ? ` (${cpuVendor})` : '';
+                
+                const isWindows = text.match(/Windows/i);
+                if (isWindows && (architecture === 'arm' || cpuVendor.includes('ARM'))) {
+                    processorStatus = 'fail';
+                    processorDetail = `${processorName || 'ARM processor'} detected on Windows. Requires x64 Intel/AMD processor.`;
+                } else if (cores >= 2 && speed >= 1.8) {
+                    processorStatus = 'pass';
+                    processorDetail = `${processorName || cores + ' cores'}${vendorInfo} @ ${speed} GHz${architecture && !cpuVendor ? ', ' + architecture : ''}`;
+                } else if (cores > 0 && cores <= 2) {
+                    // 2 cores or less - must meet speed requirement
+                    if (speed > 0 && speed < 1.8) {
+                        processorStatus = 'fail';
+                        processorDetail = `${cores} core(s)${vendorInfo} @ ${speed} GHz. Requires at least 2 cores and 1.8 GHz.`;
+                    } else {
+                        processorStatus = 'fail';
+                        processorDetail = `Only ${cores} core(s)${vendorInfo} detected. Requires at least 2 cores.`;
+                    }
+                } else if (cores > 2 && speed > 0 && speed < 1.8) {
+                    // More than 2 cores but below speed - needs manual verification
+                    processorStatus = 'unknown';
+                    processorDetail = `${cores} cores${vendorInfo} @ ${speed} GHz. Speed below 1.8 GHz minimum but has ${cores} cores - manual verification recommended.`;
+                } else {
+                    processorDetail = `Processor info found but incomplete: ${processorName}${vendorInfo} ${cores ? cores + ' cores' : ''} ${speed ? speed + ' GHz' : ''}`;
+                }
+                
+                parsedResults.processor = { status: processorStatus, detail: processorDetail, isHTML: false };
+            }
+            
+            const memoryMatch = text.match(/(?:Installed RAM|Memory)[:\s]+([\d.]+)\s*GB/i);
+            const availableMatch = text.match(/Available[:\s]+([\d.]+)\s*GB/i);
+            const usableMatch = text.match(/\(([\d.]+)\s*GB usable\)/i);
+            
+            if (memoryMatch) {
+                const installedGB = parseFloat(memoryMatch[1]);
+                const availableGB = availableMatch ? parseFloat(availableMatch[1]) : null;
+                const usableGB = usableMatch ? parseFloat(usableMatch[1]) : null;
+                
+                let memoryDetail = `${installedGB} GB RAM installed`;
+                if (usableGB) {
+                    memoryDetail += ` (${usableGB} GB usable)`;
+                }
+                if (availableGB !== null) {
+                    memoryDetail += `, ${availableGB} GB currently available`;
+                }
+                
+                const effectiveRAM = availableGB || usableGB || installedGB;
+                
+                parsedResults.memory = {
+                    status: effectiveRAM >= 2 ? 'pass' : 'fail',
+                    detail: effectiveRAM >= 2 ? 
+                        memoryDetail : 
+                        `${memoryDetail}. Requires at least 2 GB available.`,
+                    isHTML: false
+                };
+            }
+            
+            const systemTypeMatch = text.match(/System type[:\s]+(.+)/i);
+            if (systemTypeMatch) {
+                const systemType = systemTypeMatch[1].toLowerCase();
+                const is64bit = systemType.includes('64-bit');
+                const isX64 = systemType.includes('x64');
+                
+                if (!is64bit) {
+                    parsedResults.os = {
+                        status: 'fail',
+                        detail: '32-bit system detected. Requires 64-bit operating system.',
+                        isHTML: false
+                    };
+                } else if (isX64) {
+                    parsedResults.os = {
+                        status: 'pass',
+                        detail: '64-bit operating system, x64-based processor confirmed',
+                        isHTML: false
+                    };
+                }
+            }
+            
+            const editionMatch = text.match(/Edition[:\s]+Windows\s+([\d]+)/i);
+            if (editionMatch) {
+                const version = parseInt(editionMatch[1]);
+                if (version >= 10) {
+                    parsedResults.osVersion = {
+                        status: 'pass',
+                        detail: `Windows ${version} confirmed`,
+                        isHTML: false
+                    };
+                } else {
+                    parsedResults.osVersion = {
+                        status: 'fail',
+                        detail: `Windows ${version} detected. Requires Windows 10 or later.`,
+                        isHTML: false
+                    };
+                }
+            }
+            
+            if (Object.keys(parsedResults).length > 0) {
+                document.getElementById('parsed-section').classList.remove('hidden');
+                renderParsedResults(parsedResults);
+                
+                Object.assign(results, parsedResults);
+                updateSummary();
+            } else {
+                alert('Could not parse system information. Please ensure you copied the correct format.');
+            }
+        }
+
+        function renderAutoDetected() {
+            const container = document.getElementById('auto-requirements');
+            container.innerHTML = '';
+            
+            const requirements = [
+                { key: 'browser', label: 'Browser', required: 'Google Chrome or Microsoft Edge' },
+                { key: 'os', label: 'Operating System', required: 'Windows 10+ (64-bit) or macOS 11+' },
+                { key: 'processor', label: 'Processor', required: '2+ cores, 1.8+ GHz, x64 (Intel/AMD)' },
+                { key: 'memory', label: 'Physical Memory', required: '2 GB or more available' },
+                { key: 'disk', label: 'Disk Space', required: '1 GB or more available' },
+                { key: 'camera', label: 'Camera', required: '480p or better' },
+                { key: 'microphone', label: 'Microphone', required: 'Working microphone with audio input' }
+            ];
+            
+            requirements.forEach(req => {
+                const result = results[req.key];
+                const detailContent = result.isHTML ? result.detail : (result.detail ? `${result.detail}` : '');
+                
+                const badgeClass = result.status === 'pass' ? 'badge-pass' : 
+                                  result.status === 'fail' ? 'badge-fail' : 'badge-unknown';
+                const badgeIcon = result.status === 'pass' ? '✓' : 
+                                 result.status === 'fail' ? '✗' : '?';
+                const badgeText = result.status === 'pass' ? 'Pass' : 
+                                 result.status === 'fail' ? 'Fail' : 'Unknown';
+                
+                const requirementItem = document.createElement('div');
+                requirementItem.className = 'requirement-item';
+                requirementItem.innerHTML = `
+                    <div class="requirement-info">
+                        <div class="requirement-label">${req.label}</div>
+                        <div class="requirement-detail">Required: ${req.required}</div>
+                        ${detailContent ? `<div class="requirement-detail" style="margin-top: 6px; color: hsl(0 0% 20%);">${detailContent}</div>` : ''}
+                    </div>
+                    <div class="badge ${badgeClass}">
+                        <span class="badge-icon">${badgeIcon}</span>
+                        ${badgeText}
+                    </div>
+                `;
+                container.appendChild(requirementItem);
+            });
+        }
+
+        function renderParsedResults(parsedResults) {
+            const container = document.getElementById('parsed-results');
+            container.innerHTML = '';
+            
+            Object.entries(parsedResults).forEach(([key, result]) => {
+                const labels = {
+                    processor: 'Processor Details',
+                    memory: 'Memory Details',
+                    os: 'System Type',
+                    osVersion: 'OS Version'
+                };
+                
+                const badgeClass = result.status === 'pass' ? 'badge-pass' : 
+                                  result.status === 'fail' ? 'badge-fail' : 'badge-unknown';
+                const badgeIcon = result.status === 'pass' ? '✓' : 
+                                 result.status === 'fail' ? '✗' : '?';
+                const badgeText = result.status === 'pass' ? 'Pass' : 
+                                 result.status === 'fail' ? 'Fail' : 'Unknown';
+                
+                const div = document.createElement('div');
+                div.className = 'requirement-item';
+                div.innerHTML = `
+                    <div class="requirement-info">
+                        <div class="requirement-label">${labels[key] || key}</div>
+                        <div class="requirement-detail">${result.detail}</div>
+                    </div>
+                    <div class="badge ${badgeClass}">
+                        <span class="badge-icon">${badgeIcon}</span>
+                        ${badgeText}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateSummary() {
+            const summary = document.getElementById('summary');
+            const statuses = Object.values(results).map(r => r.status);
+            const passCount = statuses.filter(s => s === 'pass').length;
+            const failCount = statuses.filter(s => s === 'fail').length;
+            const unknownCount = statuses.filter(s => s === 'unknown').length;
+            
+            if (failCount > 0) {
+                summary.className = 'summary-card summary-fail';
+                summary.innerHTML = `
+                    <h2>❌ System Does Not Meet Requirements</h2>
+                    <p>${failCount} requirement(s) failed • ${passCount} passed • ${unknownCount} need verification</p>
+                `;
+            } else if (unknownCount > 0) {
+                summary.className = 'summary-card summary-unknown';
+                summary.innerHTML = `
+                    <h2>⚠️ Additional Verification Needed</h2>
+                    <p>${passCount} requirements passed • ${unknownCount} need manual verification</p>
+                `;
+            } else {
+                summary.className = 'summary-card summary-pass';
+                summary.innerHTML = `
+                    <h2>✅ All Requirements Met!</h2>
+                    <p>Your system meets all ${passCount} requirements</p>
+                `;
+            }
+        }
+
+        function resetChecker() {
+            stopMicrophoneTest();
+            stopCameraTest();
+            
+            document.getElementById('systemInfo').value = '';
+            document.getElementById('auto-section').classList.add('hidden');
+            document.getElementById('manual-section').classList.add('hidden');
+            document.getElementById('parsed-section').classList.add('hidden');
+            document.getElementById('permission-box').classList.add('hidden');
+            
+            results = {
+                browser: { status: 'unknown', detail: '', isHTML: false },
+                os: { status: 'unknown', detail: '', isHTML: false },
+                processor: { status: 'unknown', detail: '', isHTML: false },
+                memory: { status: 'unknown', detail: '', isHTML: false },
+                disk: { status: 'unknown', detail: '', isHTML: false },
+                camera: { status: 'unknown', detail: '', isHTML: false },
+                microphone: { status: 'unknown', detail: '', isHTML: false }
+            };
+            
+            document.getElementById('auto-requirements').innerHTML = '';
+            const summary = document.getElementById('summary');
+            summary.className = 'summary-card summary-default';
+            summary.innerHTML = `
+                <h2>Click "Check All Requirements" to Begin</h2>
+                <p>We'll automatically detect what we can and guide you through the rest</p>
+            `;
+        }
+        
+        window.addEventListener('beforeunload', () => {
+            stopMicrophoneTest();
+            stopCameraTest();
+        });
+    </script>
+</body>
+</html>
