@@ -454,6 +454,12 @@
             </div>
         </div>
         
+        <div class="alert alert-warning">
+            <h3>⚠️ Important Note</h3>
+            <p>These automated equipment checks provide a preliminary assessment but do not guarantee your device's functionality with Examena. It is strongly recommended to complete a sample test using Examena with your instructor to ensure everything works properly before your actual exam.</p>
+            <p style="margin-top: 12px;"><strong>For macOS users:</strong> Please refer to <a href="https://cdn.maivenpoint.com/assets/webhelp/examena-user-guide-for-candidate/index.htm#!Documents/howtoprepareforclosedbookexams.htm" target="_blank">"Install Examena app on macOS"</a> to ensure you have set up the correct Privacy & Security settings.</p>
+        </div>
+        
         <div class="card hidden" id="auto-section">
             <div class="card-title">
                 <span>🔄</span> Auto-Detected Requirements
@@ -528,9 +534,10 @@
                 <h3>How to Check Your System Information:</h3>
                 <p><strong>Windows:</strong> Press Win + I → System → About. For available RAM, press Ctrl + Shift + Esc → Performance → Memory.</p>
                 <p style="margin-top: 8px;"><strong>macOS:</strong> For System Report:</p>
-                <p style="margin-left: 16px; margin-top: 4px;">• <strong>macOS Ventura and later:</strong> Press and hold Option key, click  menu, then System Information</p>
+                <p style="margin-left: 16px; margin-top: 4px;">• <strong>macOS Ventura and later:</strong> Click the Apple menu > System Settings > General > About. For a more detailed report, click System Report.</p>
                 <p style="margin-left: 16px; margin-top: 4px;">• <strong>macOS Monterey and earlier:</strong> Click  menu → About This Mac → System Report… button</p>
                 <p style="margin-top: 8px;">For available RAM: Open Activity Monitor → Memory tab (shows Physical Memory and Memory Used)</p>
+                <p style="margin-top: 8px;">For disk space: Click  menu → About This Mac → Storage tab (shows available space)</p>
             </div>
             
             <p style="color: hsl(0 0% 45%); font-size: 13px; margin-bottom: 12px;">Paste your system information below for more accurate processor, memory, and disk space checks:</p>
@@ -548,9 +555,13 @@ Chip: Apple M2
 Total Number of Cores: 8
 Memory: 16 GB
 
-Or for Activity Monitor (Memory tab):
+For Activity Monitor (Memory tab):
 Physical Memory: 16 GB
-Memory Used: 8.5 GB"></textarea>
+Memory Used: 8.5 GB
+
+For disk space (Storage tab):
+947.1 GB available of 994.66 GB
+or: Free: 845.06GB"></textarea>
             <button class="btn btn-primary" onclick="parseSystemInfo()">Analyze System Information</button>
         </div>
         
@@ -908,28 +919,28 @@ Memory Used: 8.5 GB"></textarea>
                     
                     if (availableGB >= 1) {
                         results.disk = { 
-                            status: 'pass', 
-                            detail: `Approximately ${availableGB} GB browser storage available`,
+                            status: 'unknown', 
+                            detail: `Approximately ${availableGB} GB browser storage available. Note: Cannot auto-detect actual disk space. Please paste disk space info for verification.`,
                             isHTML: false
                         };
                     } else {
                         results.disk = { 
                             status: 'unknown', 
-                            detail: `Browser storage: ${availableGB} GB. Please verify you have at least 1 GB free.`,
+                            detail: `Browser storage: ${availableGB} GB. Cannot auto-detect actual disk space. Please paste disk space info to verify you have at least 1 GB free.`,
                             isHTML: false
                         };
                     }
                 } catch (e) {
                     results.disk = { 
                         status: 'unknown', 
-                        detail: 'Cannot detect disk space automatically.',
+                        detail: 'Cannot detect disk space automatically. Please paste disk space information.',
                         isHTML: false
                     };
                 }
             } else {
                 results.disk = { 
                     status: 'unknown', 
-                    detail: 'Cannot detect disk space automatically.',
+                    detail: 'Cannot detect disk space automatically. Please paste disk space information.',
                     isHTML: false
                 };
             }
@@ -1463,6 +1474,31 @@ Memory Used: 8.5 GB"></textarea>
                 }
             }
             
+            // Parse disk space - multiple formats
+            // Format 1: "947.1 GB available of 994.66 GB"
+            const diskAvailableMatch = text.match(/([\d.]+)\s*GB\s+available/i);
+            // Format 2: "Free: 845.06GB" or "Free: 845.06 GB"
+            const diskFreeMatch = text.match(/Free[:\s]+([\d.]+)\s*GB/i);
+            
+            if (diskAvailableMatch || diskFreeMatch) {
+                const availableGB = diskAvailableMatch ? parseFloat(diskAvailableMatch[1]) : 
+                                   diskFreeMatch ? parseFloat(diskFreeMatch[1]) : 0;
+                
+                if (availableGB >= 1) {
+                    parsedResults.disk = {
+                        status: 'pass',
+                        detail: `${availableGB} GB free disk space`,
+                        isHTML: false
+                    };
+                } else {
+                    parsedResults.disk = {
+                        status: 'fail',
+                        detail: `Only ${availableGB} GB free disk space. Requires at least 1 GB.`,
+                        isHTML: false
+                    };
+                }
+            }
+            
             if (Object.keys(parsedResults).length > 0) {
                 document.getElementById('parsed-section').classList.remove('hidden');
                 renderParsedResults(parsedResults);
@@ -1524,6 +1560,7 @@ Memory Used: 8.5 GB"></textarea>
                 const labels = {
                     processor: 'Processor Details',
                     memory: 'Memory Details',
+                    disk: 'Disk Space',
                     os: 'System Type',
                     osVersion: 'OS Version'
                 };
