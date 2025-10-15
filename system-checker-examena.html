@@ -527,7 +527,10 @@
             <div class="alert alert-info">
                 <h3>How to Check Your System Information:</h3>
                 <p><strong>Windows:</strong> Press Win + I → System → About. For available RAM, press Ctrl + Shift + Esc → Performance → Memory.</p>
-                <p style="margin-top: 8px;"><strong>macOS:</strong> Click  → About This Mac. For available RAM, open Activity Monitor → Memory tab.</p>
+                <p style="margin-top: 8px;"><strong>macOS:</strong> For System Report:</p>
+                <p style="margin-left: 16px; margin-top: 4px;">• <strong>macOS Ventura and later:</strong> Press and hold Option key, click  menu, then System Information</p>
+                <p style="margin-left: 16px; margin-top: 4px;">• <strong>macOS Monterey and earlier:</strong> Click  menu → About This Mac → System Report… button</p>
+                <p style="margin-top: 8px;">For available RAM: Open Activity Monitor → Memory tab (shows Physical Memory and Memory Used)</p>
             </div>
             
             <p style="color: hsl(0 0% 45%); font-size: 13px; margin-bottom: 12px;">Paste your system information below for more accurate processor, memory, and disk space checks:</p>
@@ -543,7 +546,11 @@ Example macOS format:
 Model Name: MacBook Pro
 Chip: Apple M2
 Total Number of Cores: 8
-Memory: 16 GB"></textarea>
+Memory: 16 GB
+
+Or for Activity Monitor (Memory tab):
+Physical Memory: 16 GB
+Memory Used: 8.5 GB"></textarea>
             <button class="btn btn-primary" onclick="parseSystemInfo()">Analyze System Information</button>
         </div>
         
@@ -1290,11 +1297,12 @@ Memory: 16 GB"></textarea>
             const parsedResults = {};
             
             const processorMatch = text.match(/Processor[:\s]+(.+?)(?:CPU)?(?:@\s*([\d.]+)\s*GHz)?/i);
-            const coreMatch = text.match(/Cores[:\s]+(\d+)/i);
+            const chipMatch = text.match(/Chip[:\s]+(.+?)$/im);
+            const coreMatch = text.match(/(?:Cores|Total Number of Cores)[:\s]+(\d+)/i);
             const speedMatch = text.match(/(?:Base speed|Speed)[:\s]+([\d.]+)\s*(?:GHz|MHz)/i);
             const typeMatch = text.match(/(x64|x86|ARM)/i);
             
-            if (processorMatch || coreMatch || speedMatch) {
+            if (processorMatch || chipMatch || coreMatch || speedMatch) {
                 let processorDetail = '';
                 let processorStatus = 'unknown';
                 
@@ -1303,67 +1311,109 @@ Memory: 16 GB"></textarea>
                              (processorMatch && processorMatch[2]) ? parseFloat(processorMatch[2]) : 0;
                 const architecture = typeMatch ? typeMatch[1].toLowerCase() : '';
                 const processorName = processorMatch ? processorMatch[1].trim() : '';
+                const chipName = chipMatch ? chipMatch[1].trim() : '';
+                
+                // Check for known fast processors
+                const lowerChipName = chipName.toLowerCase();
+                const lowerProcessorName = processorName.toLowerCase();
+                const combinedName = (lowerChipName + ' ' + lowerProcessorName).toLowerCase();
+                
+                // Apple Silicon chips - all >= 2.4 GHz
+                const isAppleSilicon = /apple\s+(m[1-4]|a12z)/i.test(combinedName);
+                
+                // Known Intel chips >= 1.8 GHz
+                const isKnownFastIntel = /core\s*(duo|2\s*duo|2\s*extreme)/i.test(combinedName);
                 
                 let cpuVendor = '';
-                const lowerProcessorName = processorName.toLowerCase();
-                if (lowerProcessorName.includes('intel')) {
+                if (isAppleSilicon) {
+                    cpuVendor = 'Apple Silicon';
+                } else if (combinedName.includes('intel')) {
                     cpuVendor = 'Intel';
-                } else if (lowerProcessorName.includes('amd') || lowerProcessorName.includes('ryzen') || lowerProcessorName.includes('epyc')) {
+                } else if (combinedName.includes('amd') || combinedName.includes('ryzen') || combinedName.includes('epyc')) {
                     cpuVendor = 'AMD';
-                } else if (lowerProcessorName.includes('arm') || lowerProcessorName.includes('qualcomm') || 
-                           lowerProcessorName.includes('snapdragon') || architecture === 'arm') {
+                } else if (combinedName.includes('arm') || combinedName.includes('qualcomm') || 
+                           combinedName.includes('snapdragon') || architecture === 'arm') {
                     cpuVendor = 'ARM';
-                } else if (lowerProcessorName.includes('apple')) {
-                    cpuVendor = 'Apple Silicon (ARM)';
                 }
                 
                 const vendorInfo = cpuVendor ? ` (${cpuVendor})` : '';
+                const displayName = chipName || processorName || (cores ? cores + ' cores' : 'Unknown');
                 
                 const isWindows = text.match(/Windows/i);
-                if (isWindows && (architecture === 'arm' || cpuVendor.includes('ARM'))) {
+                const isMacOS = text.match(/macOS|Mac\s+OS\s+X|Model\s+Name.*Mac/i);
+                
+                if (isWindows && (architecture === 'arm' || cpuVendor.includes('ARM') || isAppleSilicon)) {
                     processorStatus = 'fail';
-                    processorDetail = `${processorName || 'ARM processor'} detected on Windows. Requires x64 Intel/AMD processor.`;
+                    processorDetail = `${displayName} detected on Windows. Requires x64 Intel/AMD processor.`;
+                } else if (isAppleSilicon && cores >= 2) {
+                    // All Apple Silicon chips are >= 2.4 GHz
+                    processorStatus = 'pass';
+                    processorDetail = `${displayName}${vendorInfo}, ${cores} cores (≥2.4 GHz)`;
+                } else if (isKnownFastIntel && cores >= 2) {
+                    // Known Intel chips that are >= 1.8 GHz
+                    processorStatus = 'pass';
+                    processorDetail = `${displayName}${vendorInfo}, ${cores} cores (≥1.8 GHz)`;
                 } else if (cores >= 2 && speed >= 1.8) {
                     processorStatus = 'pass';
-                    processorDetail = `${processorName || cores + ' cores'}${vendorInfo} @ ${speed} GHz${architecture && !cpuVendor ? ', ' + architecture : ''}`;
-                } else if (cores > 0 && cores <= 2) {
-                    // 2 cores or less - must meet speed requirement
-                    if (speed > 0 && speed < 1.8) {
+                    processorDetail = `${displayName}${vendorInfo} @ ${speed} GHz${architecture && !cpuVendor ? ', ' + architecture : ''}`;
+                } else if (cores > 0 && cores < 2) {
+                    // Less than 2 cores - fail
+                    if (speed > 0) {
                         processorStatus = 'fail';
-                        processorDetail = `${cores} core(s)${vendorInfo} @ ${speed} GHz. Requires at least 2 cores and 1.8 GHz.`;
+                        processorDetail = `Only ${cores} core${vendorInfo} @ ${speed} GHz. Requires at least 2 cores.`;
                     } else {
                         processorStatus = 'fail';
-                        processorDetail = `Only ${cores} core(s)${vendorInfo} detected. Requires at least 2 cores.`;
+                        processorDetail = `Only ${cores} core${vendorInfo}. Requires at least 2 cores.`;
                     }
+                } else if (cores >= 2 && speed > 0 && speed < 1.8) {
+                    // Has enough cores but speed too low
+                    processorStatus = 'fail';
+                    processorDetail = `${cores} cores${vendorInfo} @ ${speed} GHz. Requires at least 1.8 GHz.`;
+                } else if (cores >= 2 && !speed && isMacOS && chipName) {
+                    // macOS with chip name but no speed - might be unknown chip
+                    processorStatus = 'unknown';
+                    processorDetail = `${displayName}${vendorInfo}, ${cores} cores. Speed not listed. Please verify at <a href="https://everymac.com/systems/by_processor/" target="_blank">everymac.com/systems/by_processor/</a> that your processor is ≥1.8 GHz.`;
                 } else if (cores > 2 && speed > 0 && speed < 1.8) {
                     // More than 2 cores but below speed - needs manual verification
                     processorStatus = 'unknown';
                     processorDetail = `${cores} cores${vendorInfo} @ ${speed} GHz. Speed below 1.8 GHz minimum but has ${cores} cores - manual verification recommended.`;
                 } else {
-                    processorDetail = `Processor info found but incomplete: ${processorName}${vendorInfo} ${cores ? cores + ' cores' : ''} ${speed ? speed + ' GHz' : ''}`;
+                    processorDetail = `Processor info found but incomplete: ${displayName}${vendorInfo} ${cores ? cores + ' cores' : ''} ${speed ? speed + ' GHz' : ''}`;
                 }
                 
-                parsedResults.processor = { status: processorStatus, detail: processorDetail, isHTML: false };
+                parsedResults.processor = { status: processorStatus, detail: processorDetail, isHTML: processorStatus === 'unknown' && processorDetail.includes('everymac.com') };
             }
             
-            const memoryMatch = text.match(/(?:Installed RAM|Memory)[:\s]+([\d.]+)\s*GB/i);
+            const memoryMatch = text.match(/(?:Installed RAM|Memory|Physical Memory)[:\s]+([\d.]+)\s*GB/i);
             const availableMatch = text.match(/Available[:\s]+([\d.]+)\s*GB/i);
             const usableMatch = text.match(/\(([\d.]+)\s*GB usable\)/i);
+            const memoryUsedMatch = text.match(/Memory Used[:\s]+([\d.]+)\s*GB/i);
             
             if (memoryMatch) {
                 const installedGB = parseFloat(memoryMatch[1]);
                 const availableGB = availableMatch ? parseFloat(availableMatch[1]) : null;
                 const usableGB = usableMatch ? parseFloat(usableMatch[1]) : null;
+                const memoryUsedGB = memoryUsedMatch ? parseFloat(memoryUsedMatch[1]) : null;
                 
                 let memoryDetail = `${installedGB} GB RAM installed`;
+                let effectiveRAM = installedGB;
+                
                 if (usableGB) {
                     memoryDetail += ` (${usableGB} GB usable)`;
-                }
-                if (availableGB !== null) {
-                    memoryDetail += `, ${availableGB} GB currently available`;
+                    effectiveRAM = usableGB;
                 }
                 
-                const effectiveRAM = availableGB || usableGB || installedGB;
+                if (memoryUsedGB !== null && availableGB === null) {
+                    // Calculate available from Activity Monitor
+                    const calculatedAvailable = installedGB - memoryUsedGB;
+                    if (calculatedAvailable >= 0) {
+                        memoryDetail += `, approximately ${calculatedAvailable.toFixed(1)} GB currently available`;
+                        effectiveRAM = calculatedAvailable;
+                    }
+                } else if (availableGB !== null) {
+                    memoryDetail += `, ${availableGB} GB currently available`;
+                    effectiveRAM = availableGB;
+                }
                 
                 parsedResults.memory = {
                     status: effectiveRAM >= 2 ? 'pass' : 'fail',
@@ -1485,12 +1535,14 @@ Memory: 16 GB"></textarea>
                 const badgeText = result.status === 'pass' ? 'Pass' : 
                                  result.status === 'fail' ? 'Fail' : 'Unknown';
                 
+                const detailContent = result.isHTML ? result.detail : result.detail;
+                
                 const div = document.createElement('div');
                 div.className = 'requirement-item';
                 div.innerHTML = `
                     <div class="requirement-info">
                         <div class="requirement-label">${labels[key] || key}</div>
-                        <div class="requirement-detail">${result.detail}</div>
+                        <div class="requirement-detail">${detailContent}</div>
                     </div>
                     <div class="badge ${badgeClass}">
                         <span class="badge-icon">${badgeIcon}</span>
@@ -1564,5 +1616,4 @@ Memory: 16 GB"></textarea>
         });
     </script>
 </body>
-
 </html>
